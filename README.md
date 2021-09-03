@@ -21,6 +21,11 @@ Median
    3. Run get_all_movie_rates() function  
       3-1. call draw_movies_watched_counts function 
    4. Run draw_movies_counts() function
+   5. Run get_movie_rates_median() function
+   6. Run get_user_names() function  
+   7. Run run() function  
+      7-1. call user_similarity() fuction
+   8. Run user_similarity() function
 
 ## Requirements
 ● Python 3.8    
@@ -112,3 +117,120 @@ MovieRecommendationEngine
         mp.tight_layout()
         mp.show()
 ![Moive_Watched_Times](https://user-images.githubusercontent.com/70878758/132020746-c95c3a79-c496-4d5e-b63a-008c8b4e4b01.jpeg)
+
+##### 2-2. call get_movie_rates_median() function
+        median_ratings, mrm = self.get_movie_rates_median(all_movie_rates, ratings)
+ 
+#### 5. Run get_movie_rates_median() function
+    def get_movie_rates_median(self, all_movie_rates, ratings):
+        mrm = {}
+        for movie in all_movie_rates.keys():
+            mrm[movie] = statistics.median(all_movie_rates[movie])
+        for name in ratings.keys():
+            for movie in set(mrm)-set(ratings[name]):
+                ratings[name][movie] = mrm[movie]
+        return ratings, mrm
+        
+##### 2-3. call get_user_names() function
+        user_names = self.get_user_names(median_ratings)
+        
+#### 6. Run get_user_names() function        
+    def get_user_names(self, ratings):
+        user_names = list(ratings.keys())
+        return user_names
+
+##### 2-4. call run() function to run the engine
+        self.run(user_names, median_ratings, mrm)
+        
+#### 7. Run run() function
+    def run(self, user_names, ratings, mrm):
+        all_movie_list, scmat = set(), []
+        for user_row in user_names:
+            score_row = []
+            for user_column in user_names:
+                movies = set()
+                for movie in ratings[user_row]:
+                     if movie in ratings[user_column]:
+                        movies.add(movie)
+
+                a, b = [], []
+                for x in movies:
+                    a.append(ratings[user_row][x])
+                    b.append(ratings[user_column][x])
+                # 計算a,b的歐式距離
+                a, b = np.array(a), np.array(b)
+                score = 1 / (1 + np.sqrt(((a-b)**2).sum()))
+                score_row.append(score)
+                all_movie_list.update(movies)
+            scmat.append(score_row)
+        self.get_all_movie_list(all_movie_list)
+
+        new_matrix, similar, max_arg = [], [], []
+        for row in scmat:
+            new_row = []
+            for score in row:
+                if score == 1.0:
+                    score -= 1
+                new_row.append(round(np.max(score), 2))
+            new_matrix.append(new_row)
+
+        for new_row in new_matrix:
+            max_arg.append(np.argmax(new_row)+0.2)
+            similar.append(user_names[np.argmax(new_row)])
+
+##### 7-1. call user_similarity() fuction
+        self.user_similarity(mrm, user_names, scmat)
+        
+#### 8. Run user_similarity() function
+    def user_similarity(self, mrm, user_names, scmat):
+        with open('ratings.json', 'r') as f:
+            origin_ratings = json.loads(f.read())
+
+            scmat = np.array(scmat)
+        user_names = np.array(user_names)
+        recom_list = []
+
+        
+        '''升序排序出除了自己以外的此用者相關度'''
+        for i, user in enumerate(user_names):
+            sorted_indexs = scmat[i].argsort()[::-1]
+            sorted_Ascending_indexs = sorted_indexs[sorted_indexs != i]
+            similar_users = user_names[sorted_Ascending_indexs]
+            similar_scores = np.round(scmat[i, sorted_Ascending_indexs], 2) *100
+            print()
+            # 打印出使用者相似程度結果
+            print('使用者%d: %s\n相似程度使用者:\n%s\n相似分數%%:\n%s' %
+                  (i+1, user, similar_users, similar_scores))
+
+            '''以下製作推薦清單 : 1.取相關係數 > 0(正相關) 2.取打分高 3.取權重高 '''
+            positive_mask = similar_scores > 0
+            similar_users = similar_users[positive_mask]
+            similar_scores = similar_scores[positive_mask]
+
+            # 建立一個空字典(score_sums)把使用者沒有看過的電影清單以權重得分作為values放進
+            score_sums = {}
+            user_weight_sums = {}
+            for similar_user, similar_score in zip(similar_users, similar_scores):
+                for movie, score in origin_ratings[similar_user].items():
+                    '''假設現在遍歷到'William Reynolds'。某一個正向相似度高的使用者('John')
+                    看過的電影清單內中的一部Serendipity，沒有在William Reynolds看過的電影清單內，
+                    就先把Serendipity打上該電影的中位數'''
+                    if movie not in origin_ratings[user].keys():
+                        if movie not in score_sums.keys():
+                            score_sums[movie] = mrm[movie]
+                        score_sums[movie] += score * similar_score
+
+                        if movie not in user_weight_sums.keys():
+                            user_weight_sums[movie] = mrm[movie]
+                        user_weight_sums[movie] += similar_score
+
+            # 建立一個空電影等級空字典，用來裝放要推薦的電影
+            movie_ranks = {}
+            for movie, score_sum in score_sums.items():
+                movie_ranks[movie] = score_sum / user_weight_sums[movie]
+            valid_recomm_index = np.array(list(movie_ranks.values())).argsort()[::-1]
+            recomms = np.array(list(movie_ranks.keys()))[valid_recomm_index]
+            recom_list.append((user, recomms))
+        self.write_to_csv(recom_list)
+        
+        
