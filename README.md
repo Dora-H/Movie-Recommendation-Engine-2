@@ -19,7 +19,7 @@ Median
       2-3. call get_user_names() function  
       2-4. call run() function to run the engine  
    3. Run get_all_movie_rates() function  
-      3-1. call draw_movies_counts() function 
+      3-1. call draw_movies_watched_counts function 
    4. Run draw_movies_counts() function
 
 ## Requirements
@@ -89,11 +89,11 @@ MovieRecommendationEngine
                       all_movie_rates[movie] = [ratings[name][movie]]
                       movie_watched_counts[movie] = 1
                       
-##### 3-1. call draw_movies_counts() function
+##### 3-1. call draw_movies_watched_counts function
           self.draw_movies_watched_counts(movie_watched_counts)
           return all_movie_rates
 
-#### 4. Run draw_movies_counts() function
+#### 4. Run draw_movies_watched_counts function
     def draw_movies_watched_counts(self, counts):
         '''{'Inception': 6, 'Pulp Fiction': 7, 'Anger Management': 4,
              'Fracture': 8, 'Serendipity': 7, 'Jerry Maguire': 7}'''
