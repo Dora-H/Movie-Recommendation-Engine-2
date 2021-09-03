@@ -25,7 +25,13 @@ Median
    6. Run get_user_names() function  
    7. Run run() function  
       7-1. call user_similarity() fuction
+      7-2. call draw_user_similarity()
    8. Run user_similarity() function
+      8-1. call write_to_csv() function
+   9. Run write_to_csv() function
+   10.Run draw_user_similarity() function
+      10-1 call draw_movie_rates() function
+   11.Run draw_movie_rates() function
 
 ## Requirements
 ● Python 3.8    
@@ -231,6 +237,145 @@ MovieRecommendationEngine
             valid_recomm_index = np.array(list(movie_ranks.values())).argsort()[::-1]
             recomms = np.array(list(movie_ranks.keys()))[valid_recomm_index]
             recom_list.append((user, recomms))
+            
+#####  8-1. 8-1. call write_to_csv() function          
         self.write_to_csv(recom_list)
+
+#### 9. Run write_to_csv() function      
+    def write_to_csv(self, recom_list):
+        with open('recommendations.csv', 'w') as f:
+            for data in recom_list:
+                seq = ['Recommend ' + str(data[0]) + str(data[1])]
+                f.writelines(seq)
+                f.write('\n')
+        f.close()
         
+##### 7-2. call draw_user_similarity() 
+        self.draw_user_similarity(user_names, max_arg, ratings)
+ 
+#### 10. Run draw_user_similarity() 
+    def draw_user_similarity(self, user_names, max_arg, ratings):
+        mp.figure(self.x, figsize=self.fig_size)
+        sns.set(context='talk', style='white')
+
+        mp.subplot(211)
+        mp.title(self.x + ' '+self.y, fontsize=self.title_fontsize)
+        mp.grid(":")
+        mp.xlabel(self.x, fontsize=self.label_fontsize)
+        mp.ylabel(self.y, fontsize=self.label_fontsize)
+        mp.xticks(range(0, len(user_names)), user_names, rotation=10)
+        mp.ylim(-1, len(user_names))
+        mp.xlim(-0.25, len(user_names))
+        mp.barh(user_names, max_arg, zorder=3)
+
+        mp.subplot(212)
+        mp.xlabel(self.y, fontsize=self.label_fontsize)
+        mp.ylabel(self.x, fontsize=self.label_fontsize)
+        mp.xticks(rotation=10)
+        mp.yticks(range(0, len(user_names)), user_names)
+        mp.xlim(-0.5, len(user_names))
+        mp.scatter(user_names, max_arg, color='orange', s=150, zorder=3)
+        mp.vlines(user_names, -0.2, max_arg, linestyle="dashed", color='coral')
+        mp.hlines(max_arg, -0.8, user_names, linestyle="dashed", color='coral', linewidth=3)
+        mp.tight_layout()
+        sns.set()
+        mp.show()
+![Similarity](https://user-images.githubusercontent.com/70878758/132031964-e5c8d95e-9c80-44f1-8b6f-fec68c156aa1.png)
+
+
+##### 10-1 call  draw_movie_rates() function
+        self.draw_movie_rates(ratings, user_names)
         
+#### 11. Run draw_movie_rates() function 
+    def draw_movie_rates(self, ratings, user_names):
+        mp.figure('Movies Rates', figsize=self.fig_size)
+        mp.title('Rates', fontsize=self.title_fontsize)
+        king, item = {}, []
+        for name in ratings.keys():
+            user_data = ratings[name]
+            king[name] = []
+            for movie, score in user_data.items():
+                item.append((movie, score))
+                king[name].append((movie, score))
+
+        movies, scores = [], []
+        for i in king.values():
+            for f in i:
+                movies.append(f[0])
+                scores.append(f[1])
+
+        sns.set(style='white')
+        mp.subplot(421)
+        mp.title('%s' % user_names[0])
+        mp.grid(axis='y')
+        mp.xticks(fontsize=9, rotation=13)
+        mp.yticks(self.yts, self.movie_scale)
+        mp.xlim(-0.25, 5.2)
+        mp.ylim(0, 5)
+        mp.bar(movies[:6], scores[:6], width=0.6)
+
+        mp.subplot(422)
+        mp.title('%s' % user_names[1])
+        mp.grid(axis='y')
+        mp.xticks(fontsize=9, rotation=13)
+        mp.xlim(-0.25, 5.2)
+        mp.ylim(0, 5)
+        mp.bar(movies[6:12], scores[6:12], width=0.6)
+
+        mp.subplot(423)
+        mp.title('%s' % user_names[2])
+        mp.grid(axis='y')
+        mp.xticks(fontsize=9, rotation=13)
+        mp.yticks(self.yts, self.movie_scale)
+        mp.xlim(-0.25, 5.2)
+        mp.ylim(0, 5)
+        mp.bar(movies[12:18], scores[12:18], width=0.6)
+
+        mp.subplot(424)
+        mp.title('%s' % user_names[3])
+        mp.grid(axis='y')
+        mp.xticks(fontsize=9, rotation=13)
+        mp.xlim(-0.25, 5.2)
+        mp.ylim(0, 5)
+        mp.bar(movies[18:24], scores[18:24], width=0.6)
+
+        mp.subplot(425)
+        mp.title('%s' % user_names[4])
+        mp.grid(axis='y')
+        mp.ylabel('  ', fontsize=20)
+        mp.xticks(fontsize=9, rotation=13)
+        mp.yticks(self.yts, self.movie_scale)
+        mp.xlim(-0.25, 5.2)
+        mp.ylim(0, 5)
+        mp.bar(movies[24:30], scores[24:30], width=0.6)
+
+        mp.subplot(426)
+        mp.title('%s' % user_names[5])
+        mp.grid(axis='y')
+        mp.xticks(fontsize=9, rotation=13)
+        mp.xlim(-0.25, 5.2)
+        mp.ylim(0, 5)
+        mp.bar(movies[30:36], scores[30:36], width=0.6)
+
+        mp.subplot(427)
+        mp.title('%s' % user_names[6])
+        mp.grid(axis='y')
+        mp.xlabel(self.movie_name, fontsize=18)
+        mp.xticks(fontsize=9, rotation=13)
+        mp.yticks(self.yts, self.movie_scale)
+        mp.xlim(-0.25, 5.2)
+        mp.ylim(0, 5)
+        mp.bar(movies[36:42], scores[36:42], width=0.6)
+
+        mp.subplot(428)
+        mp.title('%s' % user_names[7])
+        mp.grid(axis='y')
+        mp.xticks(fontsize=9, rotation=13)
+        mp.xlabel(self.movie_name, fontsize=18)
+        mp.xlim(-0.25, 5.2)
+        mp.ylim(0, 5)
+        mp.bar(movies[42:], scores[42:], width=0.6)
+
+        mp.tight_layout()
+        mp.show()
+![Movies_Rates](https://user-images.githubusercontent.com/70878758/132031894-419ef85e-d3f9-4adf-ba2f-c569500caabd.png)
