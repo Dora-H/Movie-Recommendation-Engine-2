@@ -29,7 +29,6 @@ class MovieRecommendationEngine(object):
         '''{'Inception': 6, 'Pulp Fiction': 7, 'Anger Management': 4,
              'Fracture': 8, 'Serendipity': 7, 'Jerry Maguire': 7}'''
         m, r = [], []
-        # 依據電影觀看次數多次至少次排序呈現
         for movie, count in sorted(counts.items(), key=lambda counts:counts[1], reverse=True):
             m.append(movie)
             r.append(count)
@@ -168,22 +167,16 @@ class MovieRecommendationEngine(object):
         with open('ratings.json', 'r') as f:
             origin_ratings = json.loads(f.read())
 
-        # 將scmat、user_names 轉類型
-        scmat = np.array(scmat)
+            scmat = np.array(scmat)
         user_names = np.array(user_names)
-        # 設置一個空推薦清單列表
         recom_list = []
 
+        
         '''升序排序出除了自己以外的此用者相關度'''
-        # 遍歷每一位使用者，並且拿出在scmat中的排列序號
         for i, user in enumerate(user_names):
-            # 將對應到的  scmat[i]得分序號索引  升序排列
             sorted_indexs = scmat[i].argsort()[::-1]
-            # 須排除自己序號以外的排序，排列完後得到完成的得分升序索引
             sorted_Ascending_indexs = sorted_indexs[sorted_indexs != i]
-            # 將得分升序索引放進使用者內 可得出相似度使用者升序排列
             similar_users = user_names[sorted_Ascending_indexs]
-            # 再將得分升序索引放進scmat矩陣中每一行中 得出得分升序索引
             similar_scores = np.round(scmat[i, sorted_Ascending_indexs], 2) *100
             print()
             # 打印出使用者相似程度結果
@@ -191,29 +184,21 @@ class MovieRecommendationEngine(object):
                   (i+1, user, similar_users, similar_scores))
 
             '''以下製作推薦清單 : 1.取相關係數 > 0(正相關) 2.取打分高 3.取權重高 '''
-            # 取出大於0的正相關係數
             positive_mask = similar_scores > 0
-            # 再把取出的係數　進而取出相似使用者
             similar_users = similar_users[positive_mask]
-            # 再把取出的係數　進而取出相似分數
             similar_scores = similar_scores[positive_mask]
 
             # 建立一個空字典(score_sums)把使用者沒有看過的電影清單以權重得分作為values放進
             score_sums = {}
-            # 把相似度得分放進去(weight_sums)
             user_weight_sums = {}
-            # 遍歷每一位正向相似度使用者、相似度得分
             for similar_user, similar_score in zip(similar_users, similar_scores):
-                # 再遍歷每一位正向相似度使用者中看過的電影、評分
                 for movie, score in origin_ratings[similar_user].items():
                     '''假設現在遍歷到'William Reynolds'。某一個正向相似度高的使用者('John')
                     看過的電影清單內中的一部Serendipity，沒有在William Reynolds看過的電影清單內，
                     就先把Serendipity打上該電影的中位數'''
                     if movie not in origin_ratings[user].keys():
                         if movie not in score_sums.keys():
-                            # 沒有看某部電影,　所以就會帶中位數
                             score_sums[movie] = mrm[movie]
-                        # += （原使用者的評分＊與自己相似度的得分＝該電影得分權重和）
                         score_sums[movie] += score * similar_score
 
                         if movie not in user_weight_sums.keys():
@@ -230,25 +215,19 @@ class MovieRecommendationEngine(object):
         self.write_to_csv(recom_list)
 
     def get_all_movie_rates(self, ratings):
-        # 設置電影評分空字典、電影觀看次數計算空字典
         all_movie_rates, movie_watched_counts = {}, {}
         for name in ratings.keys():
             for movie in ratings[name].keys():
-                # 如果電影列表中已有此部電影名稱
                 if movie in all_movie_rates:
-                    # 直接加進評分
                     all_movie_rates[movie].append(ratings[name][movie])
-                    # 如果看過此電影次數加一次
                     movie_watched_counts[movie] += 1
-                else:  # 如果沒有此電影名稱，把名稱以及評風加進去
+                else:  
                     all_movie_rates[movie] = [ratings[name][movie]]
-                    # 如果沒看過此電影次數直接等於一
                     movie_watched_counts[movie] = 1
         self.draw_movies_watched_counts(movie_watched_counts)
         return all_movie_rates
 
     def get_movie_rates_median(self, all_movie_rates, ratings):
-        # 將使用者尚未看過的電影評分打上每一部電影的中位數
         mrm = {}
         for movie in all_movie_rates.keys():
             mrm[movie] = statistics.median(all_movie_rates[movie])
@@ -271,25 +250,17 @@ class MovieRecommendationEngine(object):
 
     def run(self, user_names, ratings, mrm):
         all_movie_list, scmat = set(), []
-        # 先遍歷每一行使用者
         for user_row in user_names:
             score_row = []
-            # 每一行中去配對每一列中是否與其他人有看過相同電影
             for user_column in user_names:
-                # 創建一個空的電影set，避免電影名稱重複，用來裝每一行&每一列都看過的電影集合
                 movies = set()
-                # 找尋每一行使用者看過的電影資料
                 for movie in ratings[user_row]:
-                    # 如果每一行使用者看過的電影也在每一列中
-                    if movie in ratings[user_column]:
-                        # 表示每一行與每一列都看過相同電影，加進movies 集合中
+                     if movie in ratings[user_column]:
                         movies.add(movie)
 
                 a, b = [], []
                 for x in movies:
-                    # 將每一行使用者在電影交集中的得分放進a空列表中
                     a.append(ratings[user_row][x])
-                    # 將每一列使用者在電影交集中的得分放進b空列表中
                     b.append(ratings[user_column][x])
                 # 計算a,b的歐式距離
                 a, b = np.array(a), np.array(b)
@@ -312,31 +283,19 @@ class MovieRecommendationEngine(object):
             max_arg.append(np.argmax(new_row)+0.2)
             similar.append(user_names[np.argmax(new_row)])
 
-        # 進行相似使用者分析
         self.user_similarity(mrm, user_names, scmat)
-
-        # 繪製使用者相似度圖示
         self.draw_user_similarity(user_names, max_arg, ratings)
 
     def read(self):
-        # 讀取數據資料
         with open('ratings.json', 'r') as f:
             ratings = json.loads(f.read())
-
-        # 調用獲取全部電影評分函數(尚未填補缺失值，才能進一步繪製總電影觀看次數統計)
+            
         all_movie_rates = self.get_all_movie_rates(ratings)
-
-        # 獲取中位數將缺失值補齊
         median_ratings, mrm = self.get_movie_rates_median(all_movie_rates, ratings)
-
-        # 獲取使用者名稱
         user_names = self.get_user_names(median_ratings)
-
-        # 執行程式
         self.run(user_names, median_ratings, mrm)
 
 
 if __name__ == "__main__":
     go = MovieRecommendationEngine()
     go.read()
-
