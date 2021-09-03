@@ -24,14 +24,14 @@ Median
    5. Run get_movie_rates_median() function
    6. Run get_user_names() function  
    7. Run run() function  
-      7-1. call user_similarity() fuction
-      7-2. call draw_user_similarity()
-   8. Run user_similarity() function
-      8-1. call write_to_csv() function
-   9. Run write_to_csv() function
-   10.Run draw_user_similarity() function
-      10-1 call draw_movie_rates() function
-   11.Run draw_movie_rates() function
+      7-1. call user_similarity() fuction  
+      7-2. call draw_user_similarity()  
+   8. Run user_similarity() function  
+      8-1. call write_to_csv() function  
+   9. Run write_to_csv() function  
+   10.Run draw_user_similarity() function  
+      10-1 call draw_movie_rates() function  
+   11.Run draw_movie_rates() function  
 
 ## Requirements
 ● Python 3.8    
