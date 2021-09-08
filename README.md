@@ -1,5 +1,7 @@
 # Movie-Recommendation-Engine-2
-The purpose of this recommendation engine is to recommend users some un-watched movies. If any unwatched movie got no rate, the rate will be put a median instead, because the median is the value separating the higher half from the lower half of all rates.   The basic feature of the median in describing data is that it is not skewed by a small proportion of extremely large or small values, and therefore provides a better representation of a "typical" value.
+The purpose of this recommendation engine is to recommend users some un-watched movies.  
+If any unwatched movie got no rate, the rate will be put a median instead(Median Imputation), because the median is the value separating the higher half from the lower half of all rates.   The basic feature of the median in describing data is that it is not skewed by a small proportion of extremely large or small values, and therefore provides a better representation of a "typical" value.
+![image](https://user-images.githubusercontent.com/70878758/132450223-c742e38e-0f7d-4c6a-88af-1bf1f6ec9bc3.png)
 
 
 ## System Algorithm
@@ -10,6 +12,7 @@ Euclidean Distance
 
 ## Missing Value Imputation
 Median
+
 
 ## Steps:
    1. Call the main finction to work  
@@ -164,7 +167,7 @@ MovieRecommendationEngine
                 for x in movies:
                     a.append(ratings[user_row][x])
                     b.append(ratings[user_column][x])
-                # 計算a,b的歐式距離
+##### calculate a,b distance by using Euclidean Distance
                 a, b = np.array(a), np.array(b)
                 score = 1 / (1 + np.sqrt(((a-b)**2).sum()))
                 score_row.append(score)
@@ -198,14 +201,14 @@ MovieRecommendationEngine
         recom_list = []
 
         
-        '''升序排序出除了自己以外的此用者相關度'''
+        '''ascending sort (except the user-self)'''
         for i, user in enumerate(user_names):
             sorted_indexs = scmat[i].argsort()[::-1]
             sorted_Ascending_indexs = sorted_indexs[sorted_indexs != i]
             similar_users = user_names[sorted_Ascending_indexs]
             similar_scores = np.round(scmat[i, sorted_Ascending_indexs], 2) *100
             print()
-            # 打印出使用者相似程度結果
+            # print the similarities
             print('使用者%d: %s\n相似程度使用者:\n%s\n相似分數%%:\n%s' %
                   (i+1, user, similar_users, similar_scores))
 
